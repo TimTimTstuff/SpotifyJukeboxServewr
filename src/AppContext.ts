@@ -1,50 +1,48 @@
-import { TSpfAccessClient } from "./spfy/TSpfAccessClient";
-import SpotifyWebApi from "spotify-web-api-node";
-import { TSpotifyClient } from "./spfy/TSpotifyClient";
-import { Env } from "./env";
-import { SaveState } from "./system/SaveState";
+import SpotifyWebApi from "spotify-web-api-node"
+import exp from 'express'
+import { Env } from "./env"
+import { HApi } from "./HApi"
+import { SaveHandler } from "./system/SaveHandler"
+import { AccessSave } from "./model/entities"
 
 export class AppContext {
 
-    public sAccess: TSpfAccessClient
-    public sApi:SpotifyWebApi
-    public tClient: TSpotifyClient
-    private isIntizialized:boolean = false
+    public static self:AppContext
+
+    public spotifyApi:SpotifyWebApi
+    public hapi: HApi
+    public storage: SaveHandler
+    private _accessData: AccessSave | null = null
+
     /**
      *
      */
     constructor(redirectUri:string) {
-        this.sApi = new SpotifyWebApi({
+        this.storage = new SaveHandler(Env.save_base_dir)
+        this.spotifyApi = new SpotifyWebApi({
             clientId: Env.spotify_app_client_id,
             clientSecret: Env.spotify_app_client_secret,
-            redirectUri: redirectUri
+            redirectUri: Env.spotify_app_redirectUri
         })
-        this.sAccess = new TSpfAccessClient(this.sApi)
-        this.tClient = new TSpotifyClient(this.sApi)
-        SaveState.readState('token', (v)=>{
-            if(v == undefined){
-                SaveState.writeState('token','')
-                return
-            }
-            Env.spotify_access_token = v
+
+        this.hapi = new HApi(Env.port)
+        let d = this.readAccessData()
+        AppContext.self = this
+    }
+
+    
+    public readAccessData() {
+        return this.storage.getSaveObject<AccessSave>('access').then(d => {
+            this._accessData = d
         })
     }
 
-    public initializeContext():void {
-        if(this.isIntizialized) return
-        SaveState.readState('lastsave',(d)=>{
-            console.log(`Last save: ${d}`)
-        })
-        
-        SaveState.writeState('lastsave',new Date().toString())
-        
-        this.sAccess.isTokenValide().then(r => {
-            console.log(`Is Valide: ${r}`)
-            if(r === false){
-            
-            }
-        })
-        
+    public get accessData() : AccessSave {
+        if(this._accessData == null) throw `Access data not set!`
+        return this._accessData
     }
+    
+
+  
 
 }

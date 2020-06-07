@@ -1,19 +1,35 @@
-import express from 'express'
-import { Env } from './env'
-import { TSpotifyClient } from './spfy/TSpotifyClient'
-import { SaveState } from './system/SaveState'
-import SpotifyWebApi from 'spotify-web-api-node'
-import { AppContext } from './AppContext'
-const app = express()
-const appContext = new AppContext("http://localhost:3000/access")
+import { AppContext } from "./AppContext";
+import { SpotifyAdminApiCtrl } from "./api/SpotifyAdminApiCtrl";
+import { TLog } from "./system/TLog";
+import { Env } from "./env";
+import SpotifyWebApi from "spotify-web-api-node";
+import { SpotifyUserApiCtrl } from "./api/SpotifyUserApiCtrl";
+
+const appContext = new AppContext('http://localhost:3000/sadmin/access')
+
+setTimeout(() => {
+ appContext.hapi.addController(new SpotifyAdminApiCtrl())
+ appContext.hapi.addController(new SpotifyUserApiCtrl())
+
+appContext.hapi.run()   
+}, 1000);
 
 
-function preCheckCall() {
-    appContext.initializeContext()
-}
+var timeLogger = 0;
+setInterval(() => {
+
+    appContext.hapi.getController<SpotifyAdminApiCtrl>('sadmin')?.refreshToken()
+   
+	timeLogger++;
+	if (timeLogger > 10) {
+		TLog.info(`Job Loop Alive!`);
+		timeLogger = 0;
+	}
+
+}, Env.systemloop_idle);
 
 
-
+/**
 app.get('/',(req,res) => {
     preCheckCall()
     res.send({message:'Welcome to the Spotify Jukebox. Have fun3!'})
@@ -21,7 +37,7 @@ app.get('/',(req,res) => {
 
 app.get('/track',(req,res) => {
     preCheckCall()
-    console.log('Requst track')
+    TLog.info(`Request Track`)
     if(Env.spotify_access_token == null){
         res.send('No access is set!')
         return
@@ -53,22 +69,9 @@ app.get('/play',(req,res) =>{
     })
 })
 
-app.get('/login',(req, res) => {
-    res.send(appContext.tClient.authorizationUrl())
-})
-
-app.get('/access',async (req, res) => {
-    console.log('call access')
-    let code:string = (<any>req.query).code
-    let auth = await appContext.sApi.authorizationCodeGrant(code)
-    console.log(auth)
-    SaveState.writeState('token',auth.body.access_token) 
-  
-    res.send()
-   
-
-})
 
 app.listen(Env.port,()  => {
     console.log(`Server started on port: ${Env.port}, have fun!`)
 })
+
+**/
