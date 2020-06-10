@@ -12,27 +12,33 @@ export class SpotifyAdminApiCtrl extends BaseController {
         super('sadmin');
 
         this.setAccessData(AppContext.self.accessData.token, 600, AppContext.self.accessData.refresh)
-        this.addGet('login',(req, res) => {
-            let uri = this.getAccessUri();
-            res.send(uri)
-        })
 
-        this.addGet('access',async (req, res) => {
-            TLog.debug(`APICALL: access`)
-            let authCode:string = (<any>req.query).code
+        this.setupApiMethods();
+    }
+
+    private setupApiMethods() {
+        this.addGet('login', (req, res) => {
+            let uri = this.getAccessUri();
+            res.send(uri);
+        });
+
+        this.addGet('access', async (req, res) => {
+            TLog.debug(`APICALL: access`);
+            let authCode: string = (<any>req.query).code;
             try {
                 await this.grantUserAccess(authCode);
-            }catch(err) {
-                TLog.err(err)
-                res.send(this.fail(res,err))
-                return
             }
-            res.send(`Access Successfull`)
-        })
-
-        this.addGet('me',async (req, res) => {
-            res.send(await this.getMe())
-        })
+            catch (err) {
+                TLog.err(err);
+                res.send(this.fail(res, err));
+                return;
+            }
+            res.send(`Access Successfull`);
+        });
+        
+        this.addGet('me', async (req, res) => {
+            res.send(await this.getMe());
+        });
     }
 
     public async getMe(): Promise<{success:boolean, me:string}> {

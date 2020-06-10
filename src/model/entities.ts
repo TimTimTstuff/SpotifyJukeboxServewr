@@ -10,3 +10,11 @@ export interface SpotifyTrack {
     artist:string,
     id:string
 }
+
+export interface SpotifyDevice {
+    id:string,
+    active:boolean,
+    name:string,
+    type:string,
+    volume:number
+}
