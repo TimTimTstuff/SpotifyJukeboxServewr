@@ -33,7 +33,7 @@
   },
   "homepage": "https://github.com/TimTimTstuff/SpotifyJukeboxServer#readme",
   "dependencies": {
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "spotify-web-api-node": "^4.0.0"
   },
   "devDependencies": {
